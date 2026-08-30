@@ -25,9 +25,14 @@
 
 ## 관련 문서
 
-- [webflux/coroutines.md](webflux/coroutines.md) — WebFlux 상세 사용법
-- [mvc/coroutines.md](mvc/coroutines.md) — MVC 상세 사용법
-- [../coroutine/basics.md](../coroutine/basics.md) — 코루틴 기본 개념
+- [mvc/basics.md](mvc/basics.md)
+- [mvc/jpa.md](mvc/jpa.md)
+- [mvc/coroutines.md](mvc/coroutines.md)
+- [webflux/coroutines.md](webflux/coroutines.md)
+- [webflux/r2dbc.md](webflux/r2dbc.md)
+- [testing.md](testing.md)
+- [configuration.md](configuration.md)
+- [../coroutine/basics.md](../coroutine/basics.md)
 
 ## 참고 자료
 
