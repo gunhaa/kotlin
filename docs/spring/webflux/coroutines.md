@@ -7,10 +7,15 @@ Spring WebFlux 위에서 코루틴을 어떻게 쓰는지만 다룬다. WebFlux�
 
 ```kotlin
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 }
 ```
+
+버전을 적지 않는 이유는 Spring Boot가 **Kotlin Coroutines BOM을 가져와 코루틴
+의존성 버전까지 관리**하기 때문이다 (Boot 4.1.1 기준 1.10.2). 바꿔야 하면
+`kotlin-coroutines.version` 프로퍼티로 지정한다. 참고로 start.spring.io에서
+리액티브 의존성을 하나라도 선택하면 `kotlinx-coroutines-reactor`는 기본으로 들어간다.
 
 `kotlinx-coroutines-reactor`(1.4.0 이상)가 클래스패스에 있어야 Spring이
 `suspend fun` / `Flow` 핸들러를 Reactor의 `Mono` / `Flux`와 자동으로
