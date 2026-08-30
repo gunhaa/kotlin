@@ -1,9 +1,7 @@
 # Spring WebFlux에서 Kotlin Coroutine 사용하기
 
-코루틴 자체 개념(launch, async/await, withContext, 예외 처리)은
-[../../coroutine/basics.md](../../coroutine/basics.md) 참고. 이 문서는 그 개념을
-Spring WebFlux 위에서 어떻게 쓰는지만 다룬다. WebFlux는 원래 논블로킹
-스택이므로 코루틴과 궁합이 가장 좋다.
+Spring WebFlux 위에서 코루틴을 어떻게 쓰는지만 다룬다. WebFlux는 원래
+논블로킹 스택이므로 코루틴과 궁합이 가장 좋다.
 
 ## 필요한 의존성
 
@@ -93,8 +91,7 @@ Mono<Summary> getSummary(@PathVariable String id) {
 `WebClient`는 리액티브 타입(`Mono`/`Flux`)을 반환하므로, 코루틴에서 쓰려면
 `kotlinx-coroutines-reactor`가 제공하는 확장 함수 `awaitBody()`,
 `awaitBodyOrNull()`, `awaitExchange()` 등으로 직접 변환해야 한다. 여러 호출을
-동시에 보내려면 [../../coroutine/basics.md](../../coroutine/basics.md)의
-async/await 패턴을 그대로 사용한다.
+동시에 보내려면 async/await 패턴을 그대로 사용한다.
 
 ```kotlin
 @GetMapping("/users/{id}/summary")
@@ -202,6 +199,10 @@ class OrderService(private val operator: TransactionalOperator) {
     }
 }
 ```
+
+## 관련 문서
+
+- [../../coroutine/basics.md](../../coroutine/basics.md) — 코루틴 기본 개념 (launch, async/await, withContext, 예외 처리)
 
 ## 참고 자료
 

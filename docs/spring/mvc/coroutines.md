@@ -1,8 +1,7 @@
 # Spring MVC에서 Kotlin Coroutine 사용하기
 
-코루틴 자체 개념(launch, async/await, withContext, 예외 처리)은
-[../../coroutine/basics.md](../../coroutine/basics.md) 참고. 이 문서는 그 개념을
-Spring MVC(서블릿 기반, 원래 블로킹 스택) 위에서 어떻게 쓰는지만 다룬다.
+Spring MVC(서블릿 기반, 원래 블로킹 스택) 위에서 코루틴을 어떻게 쓰는지만
+다룬다.
 
 Spring Framework는 5.2부터 `@Controller`의 `suspend fun` 핸들러를 지원한다.
 내부적으로 핸들러 호출을 `Mono`로 감싸 비동기 서블릿 처리로 브리지하는
@@ -71,8 +70,8 @@ Java의 `CompletableFuture`/`DeferredResult` 대비 갖는 이점이다 — 리�
 
 - **핸들러가 non-blocking일 때만 이득**이 있다. `suspend fun` 안에서 JDBC
   같은 블로킹 호출을 그대로 하면 여전히 스레드를 블로킹하므로,
-  [../../coroutine/basics.md](../../coroutine/basics.md)의 `withContext(Dispatchers.IO)`
-  패턴으로 블로킹 호출을 IO 디스패처로 옮겨야 한다.
+  `withContext(Dispatchers.IO)` 패턴으로 블로킹 호출을 IO 디스패처로
+  옮겨야 한다.
 
   ```kotlin
   suspend fun getUser(@PathVariable id: String): User =
@@ -83,6 +82,10 @@ Java의 `CompletableFuture`/`DeferredResult` 대비 갖는 이점이다 — 리�
   수준의 처리량 이득을 자동으로 얻는 것은 아니다. 진짜 논블로킹 I/O
   (`WebClient`, R2DBC 등)와 결합해야 의미가 있다.
 - `Flow<T>`, `Deferred<T>` 반환도 지원되며 각각 `Flux`/`Mono`처럼 처리된다.
+
+## 관련 문서
+
+- [../../coroutine/basics.md](../../coroutine/basics.md) — 코루틴 기본 개념 (launch, async/await, withContext, 예외 처리)
 
 ## 참고 자료
 

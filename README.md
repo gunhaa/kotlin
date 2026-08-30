@@ -1,7 +1,8 @@
 # Kotlin 학습 저장소
 
-Java 개발자가 Kotlin을 학습하기 위한 저장소. 문서/코드 작성 규칙은
-[CLAUDE.md](./CLAUDE.md) 참고 (공식 문서 근거, Java → Kotlin 순서).
+Java 개발자가 Kotlin을 학습하기 위한 저장소다. 모든 기술 설명은 Kotlin
+공식 문서를 실제로 조회해 확인한 내용만 담고, 각 개념은 Java 예시를 먼저
+보여준 뒤 대응하는 Kotlin 예시를 보여주는 순서로 작성한다.
 
 ## 학습 범위
 

@@ -359,7 +359,11 @@ val (id, name, _) = user // data class의 componentN() 활용, 필요 없는 값
 | 기본 접근 제어자 | package-private | public |
 | 문자열 조합 | `"a=" + a + ", b=" + b` / `String.format(...)` | `"a=$a, b=$b"` (문자열 템플릿) |
 | 세미콜론 | 필수 | 선택 (관용적으로 생략) |
-| 비동기/동시성 | `Thread`/`ExecutorService`/`CompletableFuture` | 코루틴 — 별도 문서 [../coroutine/basics.md](../coroutine/basics.md) 참고 |
+
+## 관련 문서
+
+- [collections.md](collections.md) — 컬렉션 사용법 전반
+- [../coroutine/basics.md](../coroutine/basics.md) — 비동기/동시성 (코루틴)
 
 ## 참고 자료
 

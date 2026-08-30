@@ -1,8 +1,6 @@
 # Kotlin Coroutine 기초
 
 Spring과 무관한, 순수 Kotlin 언어/라이브러리 차원의 코루틴 개념만 다룬다.
-Spring MVC/WebFlux에서의 활용은 [../spring/webflux/coroutines.md](../spring/webflux/coroutines.md),
-[../spring/mvc/coroutines.md](../spring/mvc/coroutines.md) 참고.
 
 실행 가능한 예제: `src/main/kotlin/com/kotlin/coroutine/Main.kt`
 (`./gradlew run`으로 실행하면 아래 4개 예제가 순서대로 출력된다.)
@@ -133,6 +131,11 @@ suspend fun exceptionHandlingExample() = supervisorScope {
 **핵심 차이**: Java의 `Future`/`exceptionally`는 실패 격리가 기본값이지만,
 Kotlin 코루틴은 "형제와 함께 취소"가 기본값이라 격리하려면 `supervisorScope`를
 명시적으로 선언해야 한다.
+
+## 관련 문서
+
+- [../spring/webflux/coroutines.md](../spring/webflux/coroutines.md) — WebFlux에서 코루틴 사용
+- [../spring/mvc/coroutines.md](../spring/mvc/coroutines.md) — MVC에서 코루틴 사용
 
 ## 참고 자료
 

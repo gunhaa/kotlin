@@ -1,8 +1,6 @@
 # Spring에서 Kotlin Coroutine — MVC vs WebFlux 개요
 
-각 스택별 상세 사용법은 [webflux/coroutines.md](webflux/coroutines.md),
-[mvc/coroutines.md](mvc/coroutines.md) 참고. 이 문서는 두 스택을 가로지르는
-Java ↔ Kotlin 대응표와 선택 기준만 정리한다.
+두 스택을 가로지르는 Java ↔ Kotlin 대응표와 선택 기준만 정리한다.
 
 ## Java 대응표 (한눈에 보기)
 
@@ -23,7 +21,13 @@ Java ↔ Kotlin 대응표와 선택 기준만 정리한다.
 | 신규 프로젝트, I/O 대부분이 non-blocking | WebFlux + suspend/Flow |
 | 기존 MVC 프로젝트에 부분적으로 비동기 호출 추가 | MVC + suspend fun, 블로킹 구간만 `withContext(Dispatchers.IO)` |
 | 여러 외부 API를 동시에 호출해야 함 | `coroutineScope { async { ... } }`로 병렬화 (WebFlux/MVC 공통) |
-| 코루틴에서 발생한 예외를 개별적으로 잡아야 함 | `supervisorScope` + `CoroutineExceptionHandler` ([coroutine/basics.md](../coroutine/basics.md) 참고) |
+| 코루틴에서 발생한 예외를 개별적으로 잡아야 함 | `supervisorScope` + `CoroutineExceptionHandler` |
+
+## 관련 문서
+
+- [webflux/coroutines.md](webflux/coroutines.md) — WebFlux 상세 사용법
+- [mvc/coroutines.md](mvc/coroutines.md) — MVC 상세 사용법
+- [../coroutine/basics.md](../coroutine/basics.md) — 코루틴 기본 개념
 
 ## 참고 자료
 
