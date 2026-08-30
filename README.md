@@ -43,9 +43,11 @@ docs/
 | 위치 | 다룬 내용 |
 |------|-----------|
 | `src/main/kotlin/com/kotlin/coroutine/Main.kt` | 코루틴 기본기 실행 예제 (launch, async/await, withContext, 예외 처리) |
-| `src/main/kotlin/com/kotlin/stdlib/KotlinVsJavaConventions.kt` | Kotlin ↔ Java 언어 컨벤션 비교 실행 예제 |
+| `src/main/kotlin/com/kotlin/stdlib/KotlinVsJavaConventions.kt` | Kotlin ↔ Java 언어 컨벤션 비교 실행 예제 (null 안전성, data class, 스코프 함수, object/companion object 등) |
+| `src/main/kotlin/com/kotlin/stdlib/CollectionsConventions.kt` | Java Collections Framework ↔ Kotlin 컬렉션 비교 실행 예제 |
 | `docs/coroutine/basics.md` | 코루틴 기본기 문서 (Spring 무관) |
 | `docs/stdlib/conventions.md` | Kotlin ↔ Java 언어 컨벤션 비교 문서 |
+| `docs/stdlib/collections.md` | Java Collections Framework ↔ Kotlin 컬렉션 비교 문서 |
 | `docs/spring/webflux/coroutines.md` | WebFlux에서 코루틴 사용법 |
 | `docs/spring/mvc/coroutines.md` | MVC에서 코루틴 사용법 |
 | `docs/spring/overview.md` | MVC/WebFlux를 가로지르는 Java 대응표 + 선택 기준 |

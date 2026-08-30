@@ -206,6 +206,151 @@ fun readConfig(path: String): String { ... }
 없애고, 실패 가능성을 표현하고 싶으면 `Result<T>`나 sealed class(위 7번
 참고)를 명시적으로 쓰도록 유도한다.
 
+## 9. 스코프 함수 (let, apply, also, run, with)
+
+Java에는 직접적인 대응이 없다. null 체크 후 처리는 if 블록으로, 객체 설정은
+세터를 여러 줄 호출하거나 Builder 패턴으로 표현한다.
+
+```java
+User user = findUserById("u1");
+String upper;
+if (user != null) {
+    upper = user.getName().toUpperCase();
+} else {
+    upper = null;
+}
+
+StringBuilder sb = new StringBuilder();
+sb.append("a");
+sb.append("b");
+String built = sb.toString(); // 세터 체이닝을 위해 변수를 계속 다시 참조해야 함
+```
+
+```kotlin
+val upper = findUserById("u1")?.let { it.name.uppercase() } // null이면 upper도 null
+
+val built = StringBuilder().apply {
+    append("a")
+    append("b")
+}.toString() // apply는 StringBuilder 자신을 반환하므로 바로 체이닝 가능
+```
+
+5개 스코프 함수는 수신자 참조 방식과 반환값이 다르다.
+
+| 함수 | 수신자 참조 | 반환값 | 주 용도 |
+|------|-------------|--------|---------|
+| `let` | `it` | 람다 결과 | null 체크 후 값 변환 |
+| `run` | `this` | 람다 결과 | 객체 초기화 + 계산 결과 반환 |
+| `with` | `this` | 람다 결과 | 반환값 없이 한 객체의 여러 멤버 호출 |
+| `apply` | `this` | 객체 자신 | 객체 설정(빌더 패턴) |
+| `also` | `it` | 객체 자신 | 부가 효과(로깅 등), 원본 값은 그대로 통과 |
+
+**핵심 차이**: Java는 null 체크와 체이닝을 매번 별도 문장으로 풀어써야 하지만,
+Kotlin은 스코프 함수로 "이 객체에 대해 무엇을 할지"를 하나의 식으로 표현한다.
+단, 중첩해서 남용하면 오히려 가독성이 떨어지므로 공식 문서도 과용을 주의하라고
+안내한다.
+
+## 10. 범위(Range)와 for 반복문
+
+Java는 인덱스 변수를 직접 초기화·조건·증감식으로 관리해야 한다.
+
+```java
+for (int i = 1; i <= 5; i++) System.out.print(i);       // 12345
+for (int i = 5; i >= 1; i--) System.out.print(i);       // 54321
+for (int i = 0; i <= 8; i += 2) System.out.print(i);    // 02468
+```
+
+Kotlin은 범위(`1..5`)와 진행(`step`, `downTo`)으로 의도를 그대로 코드로 표현한다.
+
+```kotlin
+for (i in 1..5) print(i)        // 12345
+for (i in 5 downTo 1) print(i)  // 54321
+for (i in 0..8 step 2) print(i) // 02468
+```
+
+**핵심 차이**: `1..5`(끝값 포함), `1..<5`(끝값 제외), `downTo`(역순), `step`(간격)
+조합만으로 Java의 증감식이 표현하던 대부분의 반복 패턴을 커버한다. `step`이
+붙은 범위는 `Progression`이 되며, `Iterable`을 구현하므로 `filter`/`map` 같은
+컬렉션 함수도 그대로 쓸 수 있다 (예: `(1..10).filter { it % 2 == 0 }`).
+
+## 11. object 선언 / companion object
+
+Java의 싱글턴은 private 생성자 + static 필드/메서드로 직접 구현해야 한다.
+
+```java
+public final class DataProviderManager {
+    private static final DataProviderManager INSTANCE = new DataProviderManager();
+    private final List<String> providers = new ArrayList<>();
+    private DataProviderManager() {}
+    public static DataProviderManager getInstance() { return INSTANCE; }
+    public void register(String provider) { providers.add(provider); }
+}
+DataProviderManager.getInstance().register("x");
+
+class User {
+    private final String name;
+    private User(String name) { this.name = name; }
+    static User create(String name) { return new User(name); } // static 팩토리 메서드
+}
+User.create("John");
+```
+
+Kotlin은 `object` 선언 하나로 스레드 안전한 싱글턴을 만든다 (첫 접근 시 지연
+초기화). `companion object`는 클래스 안에 정의되어 Java의 static 팩토리 메서드
+자리를 대신한다.
+
+```kotlin
+object DataProviderManager {
+    private val providers = mutableListOf<String>()
+    fun register(provider: String) = providers.add(provider)
+}
+DataProviderManager.register("x")
+
+class User private constructor(val name: String) {
+    companion object {
+        fun create(name: String) = User(name)
+    }
+}
+User.create("John")
+```
+
+**핵심 차이**: `companion object`의 멤버는 겉보기엔 Java의 `static` 멤버처럼
+`클래스명.멤버`로 접근하지만, 실제로는 static이 아니라 "companion object라는
+객체의 인스턴스 멤버"다. 그 덕분에 Java의 static과 달리 인터페이스를 구현할
+수 있다 (예: `companion object : Factory<User> { ... }`). Java와의 상호운용을
+위해 진짜 static으로 노출하고 싶으면 `@JvmStatic`을 붙인다.
+
+## 12. 구조 분해 선언 (Destructuring Declaration)
+
+Java에서 `Map.Entry`의 key/value를 각각 꺼내려면 `getKey()`/`getValue()`를
+호출해야 한다.
+
+```java
+for (Map.Entry<String, Integer> entry : scores.entrySet()) {
+    String name = entry.getKey();
+    Integer score = entry.getValue();
+    System.out.println(name + "=" + score);
+}
+```
+
+Kotlin에서는 `component1()`, `component2()` ... 함수를 제공하는 타입이면
+`val (a, b) = obj` 형태로 한 번에 여러 변수로 풀어낼 수 있다. `data class`는
+이 `componentN()` 함수를 컴파일러가 자동으로 만들어주고, 표준 라이브러리는
+`Map.Entry`에도 `component1`/`component2` 확장 함수를 제공한다.
+
+```kotlin
+for ((name, score) in scores) {
+    println("$name=$score")
+}
+
+val (id, name, _) = user // data class의 componentN() 활용, 필요 없는 값은 _로 건너뜀
+```
+
+**핵심 차이**: Java 21의 레코드 패턴(`case Point(int x, int y) -> ...`)이
+비슷한 문법을 제공하지만 `switch`/`instanceof` 문맥에 한정된다. Kotlin의
+구조 분해는 `for`, 람다 파라미터, 일반 `val` 선언 등 값을 여러 변수로
+받는 모든 곳에서 두루 쓰인다.
+
 ## 그 밖에 자주 마주치는 차이 (요약)
 
 | 항목 | Java | Kotlin |
@@ -213,6 +358,12 @@ fun readConfig(path: String): String { ... }
 | 파일 구성 | 반드시 클래스 안에 코드를 넣어야 함 | 최상위 함수/프로퍼티를 파일에 바로 작성 가능 |
 | 기본 접근 제어자 | package-private | public |
 | 문자열 조합 | `"a=" + a + ", b=" + b` / `String.format(...)` | `"a=$a, b=$b"` (문자열 템플릿) |
-| 정적 멤버 | `static` 키워드 | `companion object { }` |
 | 세미콜론 | 필수 | 선택 (관용적으로 생략) |
 | 비동기/동시성 | `Thread`/`ExecutorService`/`CompletableFuture` | 코루틴 — 별도 문서 [../coroutine/basics.md](../coroutine/basics.md) 참고 |
+
+## 참고 자료
+
+- [Scope functions](https://kotlinlang.org/docs/scope-functions.html) — let, run, with, apply, also
+- [Ranges and progressions](https://kotlinlang.org/docs/ranges.html) — `..`, `downTo`, `step`
+- [Object declarations](https://kotlinlang.org/docs/object-declarations.html) — object, companion object
+- [Destructuring declarations](https://kotlinlang.org/docs/destructuring-declarations.html)

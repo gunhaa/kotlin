@@ -14,6 +14,10 @@ fun main() {
     whenExpressionExample()
     sealedClassExample()
     checkedExceptionExample()
+    scopeFunctionsExample()
+    rangeAndLoopExample()
+    objectAndCompanionExample()
+    destructuringExample()
 }
 
 // ── 1. Null 안전성 ───────────────────────────────────────────────
@@ -169,4 +173,133 @@ fun readConfig(path: String): String =
 fun checkedExceptionExample() {
     println("\n== 8. Checked Exception 없음 ==")
     println(readConfig("/no/such/file.conf"))
+}
+
+// ── 9. 스코프 함수 (let, apply, also, run, with) ─────────────────
+//
+// Java에는 직접적인 대응이 없다. null 체크 후 처리는 if 블록으로,
+// 객체 설정은 세터를 여러 줄 호출하거나 Builder 패턴으로 표현한다.
+//
+// Java:
+//   User user = findUserById("u1");
+//   String upper;
+//   if (user != null) {
+//       upper = user.getName().toUpperCase();
+//   } else {
+//       upper = null;
+//   }
+//
+//   StringBuilder sb = new StringBuilder();
+//   sb.append("a");
+//   sb.append("b");
+//   String built = sb.toString(); // 세터 체이닝을 위해 변수를 계속 다시 참조해야 함
+//
+// Kotlin: let은 널 체크 + 결과 변환에, apply는 객체 설정(빌더 패턴)에 쓴다.
+// let/also는 인자를 it으로 받고, run/apply/with는 수신자를 this로 받는다.
+// let/run/with는 람다의 마지막 식을 반환하고, apply/also는 객체 자신을 반환한다.
+fun scopeFunctionsExample() {
+    println("\n== 9. 스코프 함수 (let, apply, also, run, with) ==")
+
+    val upper = findUserById("u1")?.let { it.name.uppercase() } // null이면 upper도 null
+    println("let: $upper")
+
+    val built = StringBuilder().apply {
+        append("a")
+        append("b")
+    }.toString() // apply는 StringBuilder 자신을 반환하므로 바로 체이닝 가능
+    println("apply: $built")
+
+    val logged = fetchCount().also { println("also: 조회된 값 = $it") } // also는 부가 효과만, 값은 그대로 통과
+    println("also 통과값: $logged")
+}
+
+fun fetchCount(): Int = 42
+
+// ── 10. 범위(Range)와 for 반복문 ─────────────────────────────────
+//
+// Java: 인덱스 변수를 직접 초기화·조건·증감식으로 관리해야 한다.
+//
+// Java:
+//   for (int i = 1; i <= 5; i++) System.out.print(i);       // 12345
+//   for (int i = 5; i >= 1; i--) System.out.print(i);       // 54321
+//   for (int i = 0; i <= 8; i += 2) System.out.print(i);    // 02468
+//
+// Kotlin: 범위(1..5)와 진행(step, downTo)으로 의도를 그대로 코드로 표현한다.
+fun rangeAndLoopExample() {
+    println("\n== 10. 범위(Range)와 for 반복문 ==")
+    for (i in 1..5) print(i)        // 12345
+    println()
+    for (i in 5 downTo 1) print(i)  // 54321
+    println()
+    for (i in 0..8 step 2) print(i) // 02468
+    println()
+}
+
+// ── 11. object 선언 / companion object ───────────────────────────
+//
+// Java의 싱글턴은 private 생성자 + static 필드/메서드로 직접 구현해야 한다.
+//
+// Java:
+//   public final class DataProviderManager {
+//       private static final DataProviderManager INSTANCE = new DataProviderManager();
+//       private final List<String> providers = new ArrayList<>();
+//       private DataProviderManager() {}
+//       public static DataProviderManager getInstance() { return INSTANCE; }
+//       public void register(String provider) { providers.add(provider); }
+//   }
+//   DataProviderManager.getInstance().register("x");
+//
+//   class User {
+//       private final String name;
+//       private User(String name) { this.name = name; }
+//       static User create(String name) { return new User(name); } // static 팩토리 메서드
+//   }
+//   User.create("John");
+//
+// Kotlin: object 선언 하나로 스레드 안전한 싱글턴이 만들어진다 (첫 접근 시 지연 초기화).
+// companion object는 클래스 안에 정의되어 Java의 static 팩토리 메서드 자리를 대신한다
+// (겉보기엔 static 같지만 실제로는 companion object라는 객체의 인스턴스 멤버다).
+object DataProviderManager {
+    private val providers = mutableListOf<String>()
+    fun register(provider: String) = providers.add(provider)
+    fun all(): List<String> = providers
+}
+
+class Account private constructor(val name: String) {
+    companion object {
+        fun create(name: String) = Account(name)
+    }
+}
+
+fun objectAndCompanionExample() {
+    println("\n== 11. object 선언 / companion object ==")
+    DataProviderManager.register("provider-a")
+    println("object 싱글턴: ${DataProviderManager.all()}")
+
+    val account = Account.create("Gunhaa") // Account.create(...) — Java의 static 팩토리 메서드 호출과 겉모습이 같다
+    println("companion object 팩토리: ${account.name}")
+}
+
+// ── 12. 구조 분해 선언 (destructuring) ───────────────────────────
+//
+// Java: Map.Entry에서 key/value를 각각 꺼내려면 entry.getKey()/getValue()를 호출해야 한다.
+//
+// Java:
+//   for (Map.Entry<String, Integer> entry : scores.entrySet()) {
+//       String name = entry.getKey();
+//       Integer score = entry.getValue();
+//       System.out.println(name + "=" + score);
+//   }
+//
+// Kotlin: data class나 Map.Entry처럼 componentN() 함수를 제공하는 타입은
+// val (a, b) = obj 형태로 한 번에 여러 변수로 풀어낼 수 있다.
+fun destructuringExample() {
+    println("\n== 12. 구조 분해 선언 ==")
+    val scores = mapOf("Gunhaa" to 90, "Kim" to 85)
+    for ((name, score) in scores) {
+        println("$name=$score")
+    }
+
+    val (id, name, _) = User("u2", "Kim", "kim@example.com") // data class의 componentN() 활용, email은 _로 건너뜀
+    println("destructuring: id=$id, name=$name")
 }
