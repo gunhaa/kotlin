@@ -10,12 +10,47 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.milliseconds
 
 fun main() = runBlocking {
+    languageLevelCoroutineExample()
     launchExample()
     asyncAwaitExample()
+    asyncBlockingExample()
     withContextExample()
     exceptionHandlingExample()
+}
+
+/**
+ * kotlinx.coroutines를 전혀 쓰지 않는 코루틴.
+ *
+ * 표준 라이브러리의 sequence는 `block: suspend SequenceScope<T>.() -> Unit`을 받고,
+ * yield는 suspend 함수다. 즉 "중단·재개"라는 언어 기능만으로 동작하며
+ * launch/async/delay/Dispatchers 같은 라이브러리 요소는 하나도 등장하지 않는다.
+ *
+ * SequenceScope는 @RestrictsSuspension으로 제한된 스코프라, 이 블록 안에 delay를 넣으면
+ * "Restricted suspending functions can invoke member or extension suspending functions
+ * only on their restricted coroutine scope."로 컴파일이 실패한다 — 컴파일러가 언어 층과
+ * 라이브러리 층의 경계를 실제로 강제한다.
+ *
+ * Java 비교:
+ * - Java에는 대응하는 언어 기능이 없다. 지연 계산 무한 수열은 Stream.iterate 같은
+ *   라이브러리 API로 표현한다:
+ *     Stream.iterate(new int[]{0, 1}, t -> new int[]{t[1], t[0] + t[1]})
+ *         .limit(10).map(t -> t[0]).toList();
+ */
+fun languageLevelCoroutineExample() {
+    println("== 언어/표준 라이브러리만으로 만드는 코루틴 예제 ==")
+    println("피보나치 10개: ${fibonacci().take(10).toList()}")
+    println("(kotlinx.coroutines 없이 동작 — yield에서 코루틴이 중단된다)")
+}
+
+fun fibonacci(): Sequence<Int> = sequence {
+    var terms = 0 to 1
+    while (true) { // 무한 루프지만, 요청받은 개수만큼만 계산된다
+        yield(terms.first)
+        terms = terms.second to (terms.first + terms.second)
+    }
 }
 
 /**
@@ -35,7 +70,7 @@ fun main() = runBlocking {
 suspend fun launchExample() = coroutineScope {
     println("== launch 예제 ==")
     launch {
-        delay(100)
+        delay(100.milliseconds)
         println("launch: 100ms 뒤 실행됨")
     }
     println("launch: 즉시 출력됨 (코루틴은 대기 중)")
@@ -69,6 +104,56 @@ suspend fun fetchValue(name: String, delayMs: Long): Int {
     delay(delayMs)
     println("$name 조회 완료")
     return delayMs.toInt()
+}
+
+/**
+ * async의 시그니처는 `block: suspend CoroutineScope.() -> T`다.
+ * 블록 자체가 suspend 람다일 뿐, 그 안에서 호출하는 함수가 suspend여야 한다는 제약은 없다
+ * (평범한 블로킹 함수도, suspend 호출이 하나도 없는 순수 계산도 들어갈 수 있다).
+ *
+ * 대신 실제로 병렬이 되는지는 "디스패처 위에서 스레드를 양보하는가"로 갈린다.
+ * runBlocking의 기본 ContinuationInterceptor는 호출 스레드에서 도는 이벤트 루프라
+ * 스레드가 하나뿐이므로, 블로킹 호출을 넣으면 async를 두 번 써도 직렬화된다.
+ *
+ * Java 비교:
+ * - CompletableFuture.supplyAsync(() -> blockingFetch("A", 300))
+ *   Java도 넘기는 것은 평범한 Supplier다. 다만 기본 실행자가 여러 스레드를 가진
+ *   ForkJoinPool.commonPool이라, 블로킹 코드를 넣어도 어쩌다 병렬이 된다.
+ * - 코루틴은 부모의 컨텍스트를 상속하므로 이 "어쩌다 병렬"이 성립하지 않는다.
+ */
+suspend fun asyncBlockingExample() = coroutineScope {
+    println("\n== async 블록 안의 코드와 디스패처 예제 ==")
+
+    val blockingOnEventLoop = measureTimeMillis {
+        val a = async { blockingFetch("A", 300) }
+        val b = async { blockingFetch("B", 300) }
+        a.await() + b.await()
+    }
+    println("블로킹 함수 + runBlocking 기본 디스패처: ${blockingOnEventLoop}ms (직렬)")
+
+    val blockingOnIo = measureTimeMillis {
+        val a = async(Dispatchers.IO) { blockingFetch("C", 300) }
+        val b = async(Dispatchers.IO) { blockingFetch("D", 300) }
+        a.await() + b.await()
+    }
+    println("블로킹 함수 + Dispatchers.IO: ${blockingOnIo}ms (병렬)")
+
+    val suspendOnEventLoop = measureTimeMillis {
+        val a = async { fetchValue("E", 300) }
+        val b = async { fetchValue("F", 300) }
+        a.await() + b.await()
+    }
+    println("suspend 함수 + runBlocking 기본 디스패처: ${suspendOnEventLoop}ms (병렬)")
+
+    // suspend 호출이 하나도 없는 순수 계산도 async 블록에 그대로 넣을 수 있다
+    val pureComputation = async { (1..1_000_000).sum() }
+    println("suspend 호출 없는 계산도 가능: ${pureComputation.await()}")
+}
+
+fun blockingFetch(name: String, sleepMs: Long): Int {
+    Thread.sleep(sleepMs) // 스레드를 붙잡는 블로킹 호출
+    println("$name 조회 완료 (thread=${Thread.currentThread().name})")
+    return sleepMs.toInt()
 }
 
 /**
