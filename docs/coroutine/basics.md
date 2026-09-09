@@ -140,7 +140,7 @@ Kotlin의 `launch`는 `CoroutineScope`의 확장 함수로, 결과값이 필요 
 ```kotlin
 suspend fun launchExample() = coroutineScope {
     launch {
-        delay(100)
+        delay(100.milliseconds) // kotlin.time.Duration.Companion.milliseconds
         println("launch: 100ms 뒤 실행됨")
     }
     println("launch: 즉시 출력됨 (코루틴은 대기 중)")
