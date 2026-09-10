@@ -52,7 +52,7 @@ handling concurrency, working with asynchronous streams, and more"라고 설명�
 한 줄이 있어야 컴파일된다.
 
 ```kotlin
-implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
 ```
 
 ### 바이트코드로 확인하는 경계
